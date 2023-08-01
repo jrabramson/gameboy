@@ -1,9 +1,12 @@
 import React, { useRef, useEffect, useState, forwardRef, useMemo } from 'react'
-import { useGLTF, useAnimations, useKeyboardControls } from '@react-three/drei'
+import { useGLTF, useAnimations, useKeyboardControls, SpotLight } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { RepeatWrapping, Vector3, Mesh, Quaternion, Clock } from 'three'
 import gsap from 'gsap'
 import { useControls } from 'leva'
+import { debounce } from "lodash";
+
+import Sound from './Sound'
 
 const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
   const mesh = new Mesh(geom, mat)
@@ -43,7 +46,6 @@ const Cart = forwardRef(({ geom, mat, fire, position = new Vector3(), rotation =
   />
 })
 
-let canFire = true;
 let velocity = 0.0,
   speed = 0.0,
   ds = 0.001,
@@ -57,8 +59,9 @@ const Gameboy = (props) => {
   const powerButtonRef = useRef()
   const targetRef = useRef()
   const cartRef = useRef()
-  const shootCartRef = useRef()
+  const soundControllerRef = useRef()
   const greenLightRef = useRef()
+  const spotLightRef = useRef(null)
 
   const { scene } = useThree()
 
@@ -73,10 +76,6 @@ const Gameboy = (props) => {
 
   const { left, right, forward, backward } = useKeyboardControls(state => state)
 
-  const { position } = useControls({
-    position: { value: [0, 0, 0], min: -10, max: 10, step: 0.05 },
-  })
-
   const onPowerOn = () => {
     greenLightRef.current.intensity = 0.0
     tl.current.clear()
@@ -88,12 +87,15 @@ const Gameboy = (props) => {
 
     tl.current.play('poweron')
 
-    props.setPowerOn()
+    setTimeout(() => {
+      props.setPowerOn()
+    }, 100)
   }
 
   useFrame((state) => {
     targetRef.current.getWorldPosition(targetPos)
     state.camera.lookAt(targetPos)
+    spotLightRef.current.lookAt(group.current.position)
 
     speed = 0.0;
 
@@ -137,7 +139,7 @@ const Gameboy = (props) => {
     if (group.current) group.current.getWorldDirection(direction)
     group.current.position.addScaledVector(direction, velocity);
 
-    const v = velocity !== 0.0 ? Math.max(Math.abs(velocity), 0.015) * 40 : 0.0;
+    const v = velocity !== 0.0 ? Math.max(Math.abs(velocity), 0.015) * 50 : 0.0;
     ['walktr', 'walktl', 'walkbr', 'walkbl', 'walking'].forEach((key) => {
       if (velocity < 0) {
         actions[key].timeScale = v
@@ -168,7 +170,7 @@ const Gameboy = (props) => {
     const unsubforwardEvent = subscribeKeys(
       (state) => state.forward,
       (value) => {
-        if (value && !actions['walking'].isRunning()) {
+        if (value) {
           ;['walktr', 'walktl', 'walkbr', 'walkbl', 'walking'].forEach((key) => {
             actions[key].reset()
             actions[key].play()
@@ -199,7 +201,7 @@ const Gameboy = (props) => {
     const unsubbackwardEvent = subscribeKeys(
       (state) => state.backward,
       (value) => {
-        if (value && !actions['walking'].isRunning()) {
+        if (value) {
           ;['walktr', 'walktl', 'walkbr', 'walkbl', 'walking'].forEach((key) => {
             actions[key].reset()
             actions[key].play()
@@ -227,37 +229,13 @@ const Gameboy = (props) => {
       }
     )
 
-    const ubsubInteractEvent = subscribeKeys(
-      (state) => state.interact,
-      (value) => {
-        if (!value) return
-
-        if (canFire) {
-          canFire = false
-
-          actions['fire'].reset().play()
-          actions['firetr'].reset().play()
-          actions['firetl'].reset().play()
-          actions['firebr'].reset().play()
-          actions['firebl'].reset().play()
-        }
-
-        setTimeout(() => {
-          canFire = true
-        }, 500)
-      }
-    )
-
     return () => {
       unsubforwardEvent()
       unsubbackwardEvent()
-      ubsubInteractEvent()
     }
   }, [])
 
-  useEffect(() => {
-    if (!interactPressed) return
-
+  const fireCart = () => {
     const [position, rotation] = getCartPosition()
 
     createCart({
@@ -268,6 +246,27 @@ const Gameboy = (props) => {
       mat: materials.Cartridge,
       scene: scene,
     })
+
+    soundControllerRef.current.play()
+
+    actions['fire'].reset().play()
+    actions['firetr'].reset().play()
+    actions['firetl'].reset().play()
+    actions['firebr'].reset().play()
+    actions['firebl'].reset().play()
+  }
+
+  const debouncedFireCart = useMemo(
+    () => debounce(fireCart, 500, {
+      'leading': true,
+      'trailing': false
+    })
+    , []);
+
+  useEffect(() => {
+    if (!interactPressed) return
+
+    debouncedFireCart()
   }, [interactPressed, cartRef.current])
 
   useEffect(() => {
@@ -342,14 +341,16 @@ const Gameboy = (props) => {
     return [worldPos, worldRot]
   }
 
-
   return (
     <>
       <group ref={group} {...props} dispose={null}>
+        <Sound url="sounds/shoot.wav" delay={3.5} ref={soundControllerRef} />
         <group name="Scene">
           <group name="gameboy" position={[0.005, 0.029, 0.001]}>
             {props.children}
 
+            <pointLight castShadow position={[0, 0.15, 0]} intensity={0.2} ref={spotLightRef} shadow-bias={0.015} distance={2.5} />
+            <pointLight position={[0, 0.15, 0]} intensity={0.2} ref={spotLightRef} shadow-bias={0.015} distance={2.5} />
             {isRedLightOn && <pointLight position={[-0.039, 0.013, -0.033]} color='red' intensity={0.5} distance={0.01} />}
             <pointLight ref={greenLightRef} position={[-0.041, -0.005, -0.071]} color='green' intensity={0.0} distance={0.006} />
 
@@ -361,7 +362,7 @@ const Gameboy = (props) => {
               position={[-0.007, -0.01, -0.036]}
               rotation={[0.03, 0, -3.141]}
             />
-            <mesh ref={targetRef} position={position} />
+            <mesh ref={targetRef} position={[0, 0, 0]} />
 
             <mesh
               name="a_low"
@@ -588,24 +589,28 @@ const Gameboy = (props) => {
               <primitive object={nodes.Bone01_3} />
             </group>
             <skinnedMesh
+              castShadow receiveShadow
               name="IK_leg_tl"
               geometry={nodes.IK_leg_tl.geometry}
               material={nodes.IK_leg_tl.material}
               skeleton={nodes.IK_leg_tl.skeleton}
             />
             <skinnedMesh
+              castShadow receiveShadow
               name="IK_leg_bl"
               geometry={nodes.IK_leg_bl.geometry}
               material={nodes.IK_leg_bl.material}
               skeleton={nodes.IK_leg_bl.skeleton}
             />
             <skinnedMesh
+              castShadow receiveShadow
               name="IK_leg_tr"
               geometry={nodes.IK_leg_tr.geometry}
               material={nodes.IK_leg_tr.material}
               skeleton={nodes.IK_leg_tr.skeleton}
             />
             <skinnedMesh
+              castShadow receiveShadow
               name="IK_leg_br"
               geometry={nodes.IK_leg_br.geometry}
               material={nodes.IK_leg_br.material}
@@ -614,6 +619,7 @@ const Gameboy = (props) => {
           </group>
           <group visible={!legsOut}>
             <skinnedMesh
+              castShadow receiveShadow
               name="unfoldleg"
               geometry={nodes.unfoldleg.geometry}
               material={nodes.unfoldleg.material}
@@ -623,6 +629,7 @@ const Gameboy = (props) => {
               <primitive object={nodes.Bone01_4} />
             </group>
             <skinnedMesh
+              castShadow receiveShadow
               name="unfoldleg001"
               geometry={nodes.unfoldleg001.geometry}
               material={nodes.unfoldleg001.material}
@@ -632,6 +639,7 @@ const Gameboy = (props) => {
               <primitive object={nodes.Bone01_5} />
             </group>
             <skinnedMesh
+              castShadow receiveShadow
               name="unfoldleg002"
               geometry={nodes.unfoldleg002.geometry}
               material={nodes.unfoldleg002.material}
@@ -641,6 +649,7 @@ const Gameboy = (props) => {
               <primitive object={nodes.Bone01_6} />
             </group>
             <skinnedMesh
+              castShadow receiveShadow
               name="unfoldleg003"
               geometry={nodes.unfoldleg003.geometry}
               material={nodes.unfoldleg003.material}

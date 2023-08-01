@@ -10,6 +10,7 @@ import CameraAnimation from './CameraAnimation'
 import Floor from './Floor'
 
 import './styles.css'
+import Sound from './Sound'
 
 const Loader = () => {
   const { loaded, total } = useProgress();
@@ -23,24 +24,15 @@ const Loader = () => {
 }
 
 function Scene() {
-  const spotLightRef = useRef(null)
   const cameraRef = useRef(null)
+  const soundControllerRef = useRef(null)
 
   const [isStarted, setIsStarted] = React.useState(true)
   const [isOn, setIsOn] = React.useState(false)
 
-  // const { position } = useControls({
-  //   position: { value: [1.1, 0.2, 0.7], min: -10, max: 10, step: 0.1 },
-  // })
-
   const setPowerOn = () => {
     setIsOn(true)
   }
-
-  useEffect(() => {
-    if (!spotLightRef.current) return
-    spotLightRef.current.lookAt([0, 0, 0])
-  }, [spotLightRef.current])
 
   return (
     <Suspense fallback={<Loader />}>
@@ -51,18 +43,20 @@ function Scene() {
           outputColorSpace: SRGBColorSpace,
           physicallyCorrectLights: true
         }}
-        shadows>
+        shadows="soft">
         <CameraAnimation camera={cameraRef} isStarted={isStarted} isOn={isOn} />
-        {/* <OrbitControls /> */}
+        <Sound url="sounds/startup.mp3" delay={3.7} play={isOn} ref={soundControllerRef} />
+        <OrbitControls />
 
         <color args={['#080406']} attach="background" />
-        {/* <fog attach="fog" args={['#171720', 60, 90]} /> */}
+        <fog attach="fog" args={['#171720', 60, 90]} />
 
-        <ambientLight intensity={0.3} />
-        <pointLight position={[20, 5, 20]} intensity={1.0} />
-        <directionalLight position={[0, 5, 0]} intensity={2.0} radius={0.01} ref={spotLightRef} />
+        <ambientLight intensity={0.2} />
+        {/* <pointLight position={[20, 5, 20]} intensity={1.0} /> */}
 
-        <Gameboy scale={5.0} position={[0, 0.1, 0]} isOn={isOn} setPowerOn={setPowerOn}>
+        <Gameboy scale={5.0} position={[0, 0, 0]} isOn={isOn} setPowerOn={setPowerOn}>
+          <Sound url="sounds/cybergrind.wav" delay={4.8} play={isOn} loop={true} volume={0.5} />
+
           <PerspectiveCamera near={0.1} position={[1.1, 0.2, 0.7]} makeDefault ref={cameraRef}>
             {!isStarted && <Text fontSize={0.1} position={[0, 0.1, -3.0]} color="white" anchorX="center" anchorY="middle" onClick={() => setIsStarted(true)} onPointerEnter={() => { document.body.style.cursor = 'pointer' }} onPointerLeave={() => { document.body.style.cursor = 'default' }}>
               new game(boy)
@@ -70,7 +64,7 @@ function Scene() {
             </Text>}
           </PerspectiveCamera>
         </Gameboy>
-        <ContactShadows position={[0, 0.02, 0]} opacity={0.25} scale={10} blur={1.5} far={0.8} />
+        {/* <ContactShadows position={[0, 0.1, 0]} opacity={1.0} scale={10} blur={1.5} far={0.8} /> */}
 
         <Floor isOn={isOn} />
 
