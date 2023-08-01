@@ -47,7 +47,7 @@ const CameraAnimation = ({ camera, isStarted, isOn }) => {
     }, 'on')
 
     tl.current.to(camera.current.position, {
-      delay: 4.0,
+      delay: 6.0,
       duration: 3.0,
       x: -0.005,
       y: 0.3,
@@ -56,7 +56,7 @@ const CameraAnimation = ({ camera, isStarted, isOn }) => {
     }, 'on')
 
     tl.current.to(camera.current.position, {
-      delay: 8.0,
+      delay: 10.0,
       duration: 4.0,
       x: 0.0,
       y: 0.18,

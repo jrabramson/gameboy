@@ -70,6 +70,7 @@ const Gameboy = (props) => {
 
   const [isRedLightOn, setIsRedLightOn] = useState(false)
   const [legsOut, setLegsOut] = useState(false)
+  const [interactionEnabled, setInteractionEnabled] = useState(false)
 
   const [subscribeKeys] = useKeyboardControls()
   const interactPressed = useKeyboardControls(state => state.interact)
@@ -96,6 +97,13 @@ const Gameboy = (props) => {
     targetRef.current.getWorldPosition(targetPos)
     state.camera.lookAt(targetPos)
     spotLightRef.current.lookAt(group.current.position)
+
+    if (!props.isOn) {
+      group.current.rotation.z = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.02
+      group.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.02
+    }
+
+    if (!interactionEnabled) return;
 
     speed = 0.0;
 
@@ -167,6 +175,8 @@ const Gameboy = (props) => {
   }, [actions])
 
   useEffect(() => {
+    if (!interactionEnabled) return;
+
     const unsubforwardEvent = subscribeKeys(
       (state) => state.forward,
       (value) => {
@@ -233,7 +243,7 @@ const Gameboy = (props) => {
       unsubforwardEvent()
       unsubbackwardEvent()
     }
-  }, [])
+  }, [interactionEnabled])
 
   const fireCart = () => {
     const [position, rotation] = getCartPosition()
@@ -264,6 +274,7 @@ const Gameboy = (props) => {
     , []);
 
   useEffect(() => {
+    if (!interactionEnabled) return
     if (!interactPressed) return
 
     debouncedFireCart()
@@ -289,7 +300,7 @@ const Gameboy = (props) => {
       setTimeout(() => {
         actions['opentr'].reset().play()
         actions['opentl'].reset().play()
-      }, 4000)
+      }, 6000)
 
       setTimeout(() => {
         ;['unfold1', 'unfold2', 'unfold3', 'unfold4'].map((key) => {
@@ -308,10 +319,14 @@ const Gameboy = (props) => {
               ['idletr', 'idletl', 'idlebr', 'idlebl', 'idle'].forEach((key) => {
                 actions[key].reset().play()
               })
+
+              setTimeout(() => {
+                setInteractionEnabled(true)
+              }, 1000)
             }, 2000)
           }, 2400)
         })
-      }, 5500)
+      }, 7500)
     }, 10)
   }, [props.isOn])
 

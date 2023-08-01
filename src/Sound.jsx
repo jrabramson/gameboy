@@ -15,7 +15,7 @@ const Sound = forwardRef(({ url, loop = false, delay = 0, trigger, play, volume 
         sound.current.setVolume(volume)
         camera.add(listener)
 
-        if (!play) return
+        if (!play) return () => camera.remove(listener)
 
         setTimeout(() => {
             sound.current.play()
@@ -33,6 +33,9 @@ const Sound = forwardRef(({ url, loop = false, delay = 0, trigger, play, volume 
     useImperativeHandle(ref, () => ({
         play: () => {
             sound.current.play()
+        },
+        stop: () => {
+            sound.current.stop()
         }
     }))
 
