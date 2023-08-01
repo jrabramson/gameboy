@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@react-three/cannon": "^6.5.2",
     "@react-three/drei": "^9.50.3",
     "@react-three/fiber": "^8.9.1",
     "gsap": "^3.12.2",

@@ -3,6 +3,7 @@ import { ACESFilmicToneMapping, SRGBColorSpace } from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Preload, Text, useProgress, ContactShadows, Hud } from '@react-three/drei'
 import { useControls } from 'leva'
+import { Physics } from '@react-three/cannon'
 
 import Gameboy from './Gameboy'
 import Cartridge from './Cartridge'
@@ -45,7 +46,7 @@ function Scene() {
 
       setTimeout(() => {
         loop2Ref.current.play()
-      }, 3500)
+      }, 3900)
     }, 500)
   }, [isOn])
 
@@ -69,21 +70,23 @@ function Scene() {
         <ambientLight intensity={0.2} />
         {/* <pointLight position={[20, 5, 20]} intensity={1.0} /> */}
 
-        {!isStarted && <Hud>
-          <Text fontSize={1.0} position={[0, -1.5, 0]} color="white" anchorX="center" anchorY="middle" onClick={() => setIsStarted(true)} onPointerEnter={() => { document.body.style.cursor = 'pointer' }} onPointerLeave={() => { document.body.style.cursor = 'default' }}>
-            new game(boy)
+        <Hud>
+          {!isStarted && <Text fontSize={0.4} position={[0, -1.8, 0]} color="white" anchorX="center" anchorY="middle" onClick={() => setIsStarted(true)} onPointerEnter={() => { document.body.style.cursor = 'pointer' }} onPointerLeave={() => { document.body.style.cursor = 'default' }}>
+            start
             <meshBasicMaterial color="white" depthTest={false} />
-          </Text>
-        </Hud>}
+          </Text>}
+        </Hud>
 
-        <Gameboy scale={5.0} position={[0, 0, 0]} isOn={isOn} setPowerOn={setPowerOn}>
-          <Sound ref={loop1Ref} url="sounds/area145.wav" play={isStarted} loop={true} volume={musicVolume} />
-          <Sound ref={loop2Ref} url="sounds/area145-2clean.mp3" loop={true} volume={musicVolume} />
+        <Physics gravity={[0, 0, 0]}>
+          <Gameboy scale={5.0} position={[0, 0, 0]} isOn={isOn} setPowerOn={setPowerOn} started={isStarted}>
+            <Sound ref={loop1Ref} url="sounds/area145.wav" play={isStarted} loop={true} volume={musicVolume} />
+            <Sound ref={loop2Ref} url="sounds/area145-2clean.mp3" loop={true} volume={musicVolume} />
 
-          <PerspectiveCamera near={0.1} position={[1.1, 0.2, 0.7]} makeDefault ref={cameraRef}>
+            <PerspectiveCamera near={0.1} position={[1.1, 0.2, 0.7]} makeDefault ref={cameraRef}>
 
-          </PerspectiveCamera>
-        </Gameboy>
+            </PerspectiveCamera>
+          </Gameboy>
+        </Physics>
         {/* <ContactShadows position={[0, 0.1, 0]} opacity={1.0} scale={10} blur={1.5} far={0.8} /> */}
 
         <Floor isOn={isOn} />

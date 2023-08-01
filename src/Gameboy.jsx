@@ -5,34 +5,15 @@ import { RepeatWrapping, Vector3, Mesh, Quaternion, Clock } from 'three'
 import gsap from 'gsap'
 import { useControls } from 'leva'
 import { debounce } from "lodash";
+import { useBox } from '@react-three/cannon'
 
 import Sound from './Sound'
 
-const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
-  const mesh = new Mesh(geom, mat)
-
-  mesh.castShadow = true
-  mesh.scale.set(0.006, 0.006, 0.006)
-  mesh.position.copy(position);
-  mesh.quaternion.copy(rotation);
-
-  scene.add(mesh)
-
-  const render = () => {
-    mesh.translateZ(-0.2);
-    mesh.rotateZ(0.2);
-
-    requestAnimationFrame(render)
-  }
-
-  setTimeout(() => {
-    scene.remove(mesh)
-  }, 5000)
-
-  requestAnimationFrame(render);
-}
+const carts = [];
 
 const Cart = forwardRef(({ geom, mat, fire, position = new Vector3(), rotation = new Vector3() }, ref) => {
+  // const [ref] = useBox(() => ({ type: 'Kinematic' }))
+
   return <mesh
     ref={ref}
     name="cart"
@@ -45,6 +26,45 @@ const Cart = forwardRef(({ geom, mat, fire, position = new Vector3(), rotation =
     scale={0.001}
   />
 })
+
+const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
+  const cart = <mesh
+    ref={ref}
+    name="cart"
+    castShadow
+    receiveShadow
+    geometry={geom}
+    material={mat}
+    position={position}
+    rotation={rotation}
+    scale={0.006}
+  />
+}
+
+// const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
+//   const mesh = new Mesh(geom, mat)
+//   const [ref] = useBox(() => ({ type: 'Kinematic' }))
+
+//   mesh.castShadow = true
+//   mesh.scale.set(0.006, 0.006, 0.006)
+//   mesh.position.copy(position);
+//   mesh.quaternion.copy(rotation);
+
+//   scene.add(mesh)
+
+//   const render = () => {
+//     mesh.translateZ(-0.2);
+//     mesh.rotateZ(0.2);
+
+//     requestAnimationFrame(render)
+//   }
+
+//   setTimeout(() => {
+//     scene.remove(mesh)
+//   }, 5000)
+
+//   requestAnimationFrame(render);
+// }
 
 let velocity = 0.0,
   speed = 0.0,
@@ -281,6 +301,8 @@ const Gameboy = (props) => {
   }, [interactPressed, cartRef.current])
 
   useEffect(() => {
+    if (!props.started) return
+
     setTimeout(() => {
       tl.current.to(greenLightRef.current, {
         duration: 3.5,
@@ -289,7 +311,7 @@ const Gameboy = (props) => {
 
       tl.current.play('greenlight')
     }, 6500);
-  }, [])
+  }, [props.started])
 
   useEffect(() => {
     if (!props.isOn) return
@@ -322,6 +344,10 @@ const Gameboy = (props) => {
 
               setTimeout(() => {
                 setInteractionEnabled(true)
+
+                setTimeout(() => {
+                  document.querySelector('.controls').classList.add('active')
+                }, 2000)
               }, 1000)
             }, 2000)
           }, 2400)

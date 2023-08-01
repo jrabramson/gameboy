@@ -7,7 +7,13 @@
   <meta name="theme-color" content="#000000">
   <link rel="shortcut icon" href="favicon.ico">
 
-  <title>React App</title>
+  <style>
+    .controls {
+      opacity: 0;
+    }
+  </style>
+
+  <title>gameboy</title>
 </head>
 
 <body>
@@ -15,6 +21,20 @@
     You need to enable JavaScript to run this app.
   </noscript>
   <div id="root"></div>
+  <div class="controls">
+    <section>
+      <span>W</span>
+      <span>A</span>
+      <span>S</span>
+      <span>D</span>
+    </section>
+    <span class="space"></span>
+  </div>
+  <div class="attribution">
+    <a href="https://jesseabramson.com" target="_blank">jesse abramson</a>
+    <br />
+    music by BlendBeats
+  </div>
   <script type="module" src="/src/index.jsx"></script>
 </body>
 
