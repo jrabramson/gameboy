@@ -1,19 +1,15 @@
 import React, { useRef, useEffect, useState, forwardRef, useMemo } from 'react'
-import { useGLTF, useAnimations, useKeyboardControls, SpotLight } from '@react-three/drei'
+import { useGLTF, useAnimations, useKeyboardControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { RepeatWrapping, Vector3, Mesh, Quaternion, Clock } from 'three'
+import { Vector3, Quaternion, Mesh } from 'three'
 import gsap from 'gsap'
-import { useControls } from 'leva'
-import { debounce } from "lodash";
-import { useBox } from '@react-three/cannon'
+import { debounce } from "lodash"
 
 import Sound from './Sound'
 
 const carts = [];
 
 const Cart = forwardRef(({ geom, mat, fire, position = new Vector3(), rotation = new Vector3() }, ref) => {
-  // const [ref] = useBox(() => ({ type: 'Kinematic' }))
-
   return <mesh
     ref={ref}
     name="cart"
@@ -27,44 +23,43 @@ const Cart = forwardRef(({ geom, mat, fire, position = new Vector3(), rotation =
   />
 })
 
-const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
-  const cart = <mesh
-    ref={ref}
-    name="cart"
-    castShadow
-    receiveShadow
-    geometry={geom}
-    material={mat}
-    position={position}
-    rotation={rotation}
-    scale={0.006}
-  />
-}
-
 // const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
-//   const mesh = new Mesh(geom, mat)
-//   const [ref] = useBox(() => ({ type: 'Kinematic' }))
-
-//   mesh.castShadow = true
-//   mesh.scale.set(0.006, 0.006, 0.006)
-//   mesh.position.copy(position);
-//   mesh.quaternion.copy(rotation);
-
-//   scene.add(mesh)
-
-//   const render = () => {
-//     mesh.translateZ(-0.2);
-//     mesh.rotateZ(0.2);
-
-//     requestAnimationFrame(render)
-//   }
-
-//   setTimeout(() => {
-//     scene.remove(mesh)
-//   }, 5000)
-
-//   requestAnimationFrame(render);
+//   const cart = <mesh
+//     ref={ref}
+//     name="cart"
+//     castShadow
+//     receiveShadow
+//     geometry={geom}
+//     material={mat}
+//     position={position}
+//     rotation={rotation}
+//     scale={0.006}
+//   />
 // }
+
+const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
+  const mesh = new Mesh(geom, mat)
+
+  mesh.castShadow = true
+  mesh.scale.set(0.006, 0.006, 0.006)
+  mesh.position.copy(position);
+  mesh.quaternion.copy(rotation);
+
+  scene.add(mesh)
+
+  const render = () => {
+    mesh.translateZ(-0.2);
+    mesh.rotateZ(0.2);
+
+    requestAnimationFrame(render)
+  }
+
+  setTimeout(() => {
+    scene.remove(mesh)
+  }, 5000)
+
+  requestAnimationFrame(render);
+}
 
 let velocity = 0.0,
   speed = 0.0,
@@ -118,10 +113,10 @@ const Gameboy = (props) => {
     state.camera.lookAt(targetPos)
     spotLightRef.current.lookAt(group.current.position)
 
-    if (!props.isOn) {
-      group.current.rotation.z = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.02
-      group.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.02
-    }
+    // if (!props.isOn) {
+    //   // group.current.rotation.z = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.02
+    //   // group.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.02
+    // }
 
     if (!interactionEnabled) return;
 
@@ -168,7 +163,7 @@ const Gameboy = (props) => {
     group.current.position.addScaledVector(direction, velocity);
 
     const v = velocity !== 0.0 ? Math.max(Math.abs(velocity), 0.015) * 50 : 0.0;
-    ['walktr', 'walktl', 'walkbr', 'walkbl', 'walking'].forEach((key) => {
+    ['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
       if (velocity < 0) {
         actions[key].timeScale = v
       }
@@ -179,6 +174,7 @@ const Gameboy = (props) => {
     })
   })
 
+  // action setup
   useEffect(() => {
     ['unfold1', 'unfold2', 'unfold3', 'unfold4'].forEach((key) => {
       actions[key].setLoop(2200)
@@ -194,6 +190,7 @@ const Gameboy = (props) => {
     });
   }, [actions])
 
+  // key event subscriptions
   useEffect(() => {
     if (!interactionEnabled) return;
 
@@ -201,7 +198,7 @@ const Gameboy = (props) => {
       (state) => state.forward,
       (value) => {
         if (value) {
-          ;['walktr', 'walktl', 'walkbr', 'walkbl', 'walking'].forEach((key) => {
+          ;['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
             actions[key].reset()
             actions[key].play()
             actions[key].fadeIn(1.5)
@@ -221,7 +218,7 @@ const Gameboy = (props) => {
           actions['idlebl'].reset().play().fadeIn(0.5)
           actions['idle'].reset().play().fadeIn(0.5);
 
-          ['walktr', 'walktl', 'walkbr', 'walkbl', 'walking'].forEach((key) => {
+          ['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
             actions[key].fadeOut(1.5)
           })
         }
@@ -232,7 +229,7 @@ const Gameboy = (props) => {
       (state) => state.backward,
       (value) => {
         if (value) {
-          ;['walktr', 'walktl', 'walkbr', 'walkbl', 'walking'].forEach((key) => {
+          ;['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
             actions[key].reset()
             actions[key].play()
             actions[key].fadeIn(1.5)
@@ -252,7 +249,7 @@ const Gameboy = (props) => {
           actions['idlebl'].reset().play().fadeIn(1.6)
           actions['idle'].reset().play().fadeIn(1.6);
 
-          ['walktr', 'walktl', 'walkbr', 'walkbl', 'walking'].forEach((key) => {
+          ['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
             actions[key].fadeOut(1.5)
           })
         }
@@ -347,7 +344,7 @@ const Gameboy = (props) => {
 
                 setTimeout(() => {
                   document.querySelector('.controls').classList.add('active')
-                }, 2000)
+                }, 3000)
               }, 1000)
             }, 2000)
           }, 2400)
@@ -361,7 +358,7 @@ const Gameboy = (props) => {
       tl.current.clear()
 
       tl.current.to(targetRef.current.position, {
-        delay: 3.3,
+        delay: 3.8,
         duration: 1.5,
         y: 0.038,
       }, 'movetarget')

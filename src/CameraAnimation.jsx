@@ -1,13 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-import { Vector3 } from 'three'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 
 const CameraAnimation = ({ camera, isStarted, isOn }) => {
   const tl = useRef(gsap.timeline())
-  const [started, setStarted] = useState(false)
-  const [ready, setReady] = useState(false)
-  const vec = new Vector3()
 
   useEffect(() => {
     if (!isStarted) return
@@ -59,24 +54,14 @@ const CameraAnimation = ({ camera, isStarted, isOn }) => {
       delay: 10.0,
       duration: 4.0,
       x: 0.0,
-      y: 0.18,
-      z: 0.32,
+      y: 0.19,
+      z: 0.34,
       ease: "power3.inOut"
     }, 'on')
 
     tl.current.play('on')
   }, [camera, isOn])
 
-  // useFrame((state) => {
-  //   if (started) {
-  //     state.camera.position.lerp(vec.set(0.4, 0.2, 0.2), 0.008)
-  //   }
-
-  //   // if (ready) {
-  //   //   state.camera.position.lerp(vec.set(0, 0.3, 0.2), 0.008)
-  //   // }
-  //   return null
-  // })
   return null
 }
 

@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } f
 import { useThree, useLoader } from '@react-three/fiber'
 import { AudioListener, AudioLoader } from 'three'
 
-const Sound = forwardRef(({ url, loop = false, delay = 0, trigger, play, volume = 1.0 }, ref) => {
+const Sound = forwardRef(({ url, loop = false, delay = 0, play, volume = 1.0 }, ref) => {
     const sound = useRef()
     const { camera } = useThree()
     const [listener] = useState(() => new AudioListener())
@@ -23,12 +23,6 @@ const Sound = forwardRef(({ url, loop = false, delay = 0, trigger, play, volume 
 
         return () => camera.remove(listener)
     }, [delay, loop, play, volume])
-
-    useEffect(() => {
-        if (trigger) {
-            sound.current.play()
-        }
-    }, [trigger])
 
     useImperativeHandle(ref, () => ({
         play: () => {

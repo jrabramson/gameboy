@@ -1,12 +1,10 @@
 import React, { Suspense, useEffect, useRef } from 'react'
 import { ACESFilmicToneMapping, SRGBColorSpace } from 'three'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Preload, Text, useProgress, ContactShadows, Hud } from '@react-three/drei'
-import { useControls } from 'leva'
+import { Canvas } from '@react-three/fiber'
+import { PerspectiveCamera, Preload, Text, useProgress, Hud, OrbitControls } from '@react-three/drei'
 import { Physics } from '@react-three/cannon'
 
 import Gameboy from './Gameboy'
-import Cartridge from './Cartridge'
 import CameraAnimation from './CameraAnimation'
 import Floor from './Floor'
 
@@ -30,7 +28,6 @@ function Scene() {
   const loop1Ref = useRef(null)
   const loop2Ref = useRef(null)
 
-  const [musicVolume, setMusicVolume] = React.useState(1.0)
   const [isStarted, setIsStarted] = React.useState(false)
   const [isOn, setIsOn] = React.useState(false)
 
@@ -78,9 +75,9 @@ function Scene() {
         </Hud>
 
         <Physics gravity={[0, 0, 0]}>
-          <Gameboy scale={5.0} position={[0, 0, 0]} isOn={isOn} setPowerOn={setPowerOn} started={isStarted}>
-            <Sound ref={loop1Ref} url="sounds/area145.wav" play={isStarted} loop={true} volume={musicVolume} />
-            <Sound ref={loop2Ref} url="sounds/area145-2clean.mp3" loop={true} volume={musicVolume} />
+          <Gameboy scale={5.0} position={[0, -0.01, 0]} isOn={isOn} setPowerOn={setPowerOn} started={isStarted}>
+            <Sound ref={loop1Ref} url="sounds/area145.wav" play={isStarted} loop={true} />
+            <Sound ref={loop2Ref} url="sounds/area145-2clean.mp3" loop={true} />
 
             <PerspectiveCamera near={0.1} position={[1.1, 0.2, 0.7]} makeDefault ref={cameraRef}>
 

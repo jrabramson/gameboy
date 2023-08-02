@@ -1,7 +1,5 @@
-import { MeshReflectorMaterial, useTexture, useKeyboardControls } from '@react-three/drei'
-import { DoubleSide } from 'three'
-import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { MeshReflectorMaterial, useTexture } from '@react-three/drei'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 
 const Floor = ({ isOn }) => {
@@ -19,24 +17,6 @@ const Floor = ({ isOn }) => {
   floorNormalTexture.repeat.set(80, 80)
   floorNormalTexture.rotation = Math.PI / 2
 
-  const { forward, left, right } = useKeyboardControls(state => state)
-
-  useFrame(() => {
-    // if (forward) {
-    //   // change the floor texture offset to animate the floor taking into account the rotation of the character
-    //   floorTexture.offset.x += 0.007;
-    //   // floorTexture.offset.y += 0.015;
-    // }
-
-    // if (left) {
-    //   texturedFloorRef.current.rotation.z -= 0.01
-    // }
-
-    // if (right) {
-    //   texturedFloorRef.current.rotation.z += 0.01
-    // }
-  })
-
   useEffect(() => {
     if (!isOn) return
 
@@ -44,7 +24,7 @@ const Floor = ({ isOn }) => {
 
     tl.current.to(reflectorFloorRef.current.material, {
       duration: 1.0,
-      opacity: 0.8,
+      opacity: 0.7,
       ease: "power3.in"
     }, 'fadefloor')
 
@@ -57,8 +37,7 @@ const Floor = ({ isOn }) => {
         <planeGeometry args={[200, 200]} />
         <MeshReflectorMaterial
           color="#878790"
-          blur={[400, 400]}
-          // resolution={1024}
+          // blur={[400, 400]}
           mixBlur={1}
           mixStrength={3}
           depthScale={1}
@@ -67,7 +46,7 @@ const Floor = ({ isOn }) => {
           roughness={1}
           mirror={0.1}
           transparent
-          opacity={1.0}
+          opacity={0.9}
         />
       </mesh>
 
@@ -76,7 +55,6 @@ const Floor = ({ isOn }) => {
         <MeshReflectorMaterial
           color="#878790"
           blur={[400, 400]}
-          // resolution={1024}
           mixBlur={1}
           mixStrength={3}
           depthScale={1}
@@ -85,13 +63,8 @@ const Floor = ({ isOn }) => {
           roughness={1}
           mirror={0.1}
           map={floorTexture}
-        // normalMap={floorNormalTexture}
         />
       </mesh>
-      {/* <mesh castShadow receiveShadow position={[0, -0.001, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[200, 200]} />
-        <meshBasicMaterial color="black" />
-      </mesh> */}
     </>
   )
 }
