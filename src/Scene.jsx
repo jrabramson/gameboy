@@ -10,6 +10,7 @@ import Floor from './Floor'
 
 import './styles.css'
 import Sound from './Sound'
+import Target from './Target'
 
 const Loader = () => {
   const { loaded, total } = useProgress();
@@ -35,17 +36,17 @@ function Scene() {
     setIsOn(true)
   }
 
-  useEffect(() => {
-    if (!isOn) return
+  // useEffect(() => {
+  //   if (!isOn) return
 
-    setTimeout(() => {
-      loop1Ref.current.stop()
+  //   setTimeout(() => {
+  //     loop1Ref.current.stop()
 
-      setTimeout(() => {
-        loop2Ref.current.play()
-      }, 3900)
-    }, 500)
-  }, [isOn])
+  //     setTimeout(() => {
+  //       loop2Ref.current.play()
+  //     }, 3900)
+  //   }, 500)
+  // }, [isOn])
 
   return (
     <Suspense fallback={<Loader />}>
@@ -58,7 +59,7 @@ function Scene() {
         }}
         shadows="soft">
         <CameraAnimation camera={cameraRef} isStarted={isStarted} isOn={isOn} />
-        <Sound url="sounds/startup.mp3" delay={1.0} play={isOn} ref={soundControllerRef} />
+        <Sound url="sounds/startup.mp3" delay={4.0} play={isOn} ref={soundControllerRef} />
         {/* <OrbitControls /> */}
 
         <color args={['#080406']} attach="background" />
@@ -76,8 +77,8 @@ function Scene() {
 
         <Physics gravity={[0, 0, 0]}>
           <Gameboy scale={5.0} position={[0, -0.01, 0]} isOn={isOn} setPowerOn={setPowerOn} started={isStarted}>
-            <Sound ref={loop1Ref} url="sounds/area145.wav" play={isStarted} loop={true} />
-            <Sound ref={loop2Ref} url="sounds/area145-2clean.mp3" loop={true} />
+            {/* <Sound ref={loop1Ref} url="sounds/area145.wav" play={isStarted} loop={true} /> */}
+            {/* <Sound ref={loop2Ref} url="sounds/area145-2clean.mp3" loop={true} /> */}
 
             <PerspectiveCamera near={0.1} position={[1.1, 0.2, 0.7]} makeDefault ref={cameraRef}>
 
@@ -87,6 +88,8 @@ function Scene() {
         {/* <ContactShadows position={[0, 0.1, 0]} opacity={1.0} scale={10} blur={1.5} far={0.8} /> */}
 
         <Floor isOn={isOn} />
+
+        {/* <Target position={[2, 0, -2]} /> */}
 
         <Preload all />
       </Canvas>

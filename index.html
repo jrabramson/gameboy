@@ -8,6 +8,37 @@
   <link rel="shortcut icon" href="favicon.ico">
 
   <style>
+    html,
+    body,
+    #root {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #1E1E1E;
+      margin: 0;
+    }
+
+    .attribution {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 10px;
+      padding: 5px;
+      z-index: 99;
+      color: #ffffff;
+      font-size: 18px;
+      text-decoration: none;
+    }
+
+    .attribution a {
+      color: #ffffff;
+      font-size: 21px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
     .controls {
       opacity: 0;
     }
@@ -32,8 +63,8 @@
   </div>
   <div class="attribution">
     <a href="https://jesseabramson.com" target="_blank">jesse abramson</a>
-    <br />
-    music by BlendBeats
+    <!-- <br /> -->
+    <!-- music by BlendBeats -->
   </div>
   <script type="module" src="/src/index.jsx"></script>
 </body>

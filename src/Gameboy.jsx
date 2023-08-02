@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState, forwardRef, useMemo } from 'react'
-import { useGLTF, useAnimations, useKeyboardControls } from '@react-three/drei'
+import React, { useRef, useEffect, useState, forwardRef, useMemo, useImperativeHandle } from 'react'
+import { useGLTF, useAnimations, useKeyboardControls, useVideoTexture } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3, Quaternion, Mesh } from 'three'
 import gsap from 'gsap'
 import { debounce } from "lodash"
+import { useGameboyStore } from './state'
 
 import Sound from './Sound'
 
@@ -23,19 +24,30 @@ const Cart = forwardRef(({ geom, mat, fire, position = new Vector3(), rotation =
   />
 })
 
-// const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
-//   const cart = <mesh
-//     ref={ref}
-//     name="cart"
-//     castShadow
-//     receiveShadow
-//     geometry={geom}
-//     material={mat}
-//     position={position}
-//     rotation={rotation}
-//     scale={0.006}
-//   />
-// }
+
+const Carts = forwardRef(({ }, ref) => {
+  const addCart = ({ geom, mat, position = new Vector3(), rotation = new Vector3() }) => {
+    const cart = <mesh
+      key={carts.length}
+      name="cart"
+      castShadow
+      receiveShadow
+      geometry={geom}
+      material={mat}
+      position={position}
+      rotation={rotation}
+      scale={0.006}
+    />
+
+    carts.push(cart)
+  }
+
+  useImperativeHandle(ref, () => ({
+    addCart
+  }))
+
+  return <group ref={ref}>{carts}</group>
+})
 
 const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
   const mesh = new Mesh(geom, mat)
@@ -50,6 +62,15 @@ const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation
   const render = () => {
     mesh.translateZ(-0.2);
     mesh.rotateZ(0.2);
+
+    // const targets = useGameboyStore((state) => state.targets)
+
+    // targets.forEach((target) => {
+    //   if (mesh.position.distanceTo(new Vector3(...target.position)) < 0.5) {
+    //     scene.remove(mesh)
+    //     console.log('hit')
+    //   }
+    // })
 
     requestAnimationFrame(render)
   }
@@ -76,12 +97,15 @@ const Gameboy = (props) => {
   const cartRef = useRef()
   const soundControllerRef = useRef()
   const greenLightRef = useRef()
-  const spotLightRef = useRef(null)
+  const spotLightRef = useRef()
+  const cartsRef = useRef()
 
   const { scene } = useThree()
 
   const { nodes, materials, animations } = useGLTF('/gameboy.glb')
   const { actions } = useAnimations(animations, group)
+
+  const startupTexture = useVideoTexture('/startup.mp4')
 
   const [isRedLightOn, setIsRedLightOn] = useState(false)
   const [legsOut, setLegsOut] = useState(false)
@@ -109,8 +133,11 @@ const Gameboy = (props) => {
   }
 
   useFrame((state) => {
+    state.camera.lookAt(
+      new Vector3(targetPos.x, state.camera.position.y, targetPos.z)
+    )
+
     targetRef.current.getWorldPosition(targetPos)
-    state.camera.lookAt(targetPos)
     spotLightRef.current.lookAt(group.current.position)
 
     // if (!props.isOn) {
@@ -119,6 +146,11 @@ const Gameboy = (props) => {
     // }
 
     if (!interactionEnabled) return;
+
+    // state.camera.position.lerp(
+    //   new Vector3(targetPos.x, state.camera.position.y, targetPos.z),
+    //   0.1
+    // )
 
     speed = 0.0;
 
@@ -265,6 +297,12 @@ const Gameboy = (props) => {
   const fireCart = () => {
     const [position, rotation] = getCartPosition()
 
+    // cartsRef.current.addCart({
+    //   geom: nodes.cart.geometry,
+    //   mat: materials.Cartridge,
+    //   position: position,
+    //   rotation: rotation
+    // })
     createCart({
       position: position,
       rotation: rotation,
@@ -284,7 +322,7 @@ const Gameboy = (props) => {
   }
 
   const debouncedFireCart = useMemo(
-    () => debounce(fireCart, 500, {
+    () => debounce(fireCart, 200, {
       'leading': true,
       'trailing': false
     })
@@ -307,7 +345,7 @@ const Gameboy = (props) => {
       }, 'greenlight')
 
       tl.current.play('greenlight')
-    }, 6500);
+    }, 5500);
   }, [props.started])
 
   useEffect(() => {
@@ -360,7 +398,9 @@ const Gameboy = (props) => {
       tl.current.to(targetRef.current.position, {
         delay: 3.8,
         duration: 1.5,
-        y: 0.038,
+        y: 0.0,
+        z: -0.08,
+        x: 0
       }, 'movetarget')
 
       tl.current.play('movetarget')
@@ -381,12 +421,12 @@ const Gameboy = (props) => {
 
   return (
     <>
+      <Carts ref={cartsRef} />
       <group ref={group} {...props} dispose={null}>
         <Sound url="sounds/shoot.wav" delay={3.5} ref={soundControllerRef} />
         <group name="Scene">
+          {props.children}
           <group name="gameboy" position={[0.005, 0.029, 0.001]}>
-            {props.children}
-
             <pointLight castShadow position={[0, 0.15, 0]} intensity={0.2} ref={spotLightRef} shadow-bias={0.015} distance={2.5} />
             <pointLight position={[0, 0.15, 0]} intensity={0.2} ref={spotLightRef} shadow-bias={0.015} distance={2.5} />
             {isRedLightOn && <pointLight position={[-0.039, 0.013, -0.033]} color='red' intensity={0.5} distance={0.01} />}
@@ -570,6 +610,15 @@ const Gameboy = (props) => {
               material={materials.External}
               position={[-0.006, 0.011, -0.027]}
             />
+            {/* <mesh
+              castShadow
+              receiveShadow
+              position={[-0.006, 0.012, -0.027]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[0.05, 0.05]} />
+              <meshStandardMaterial color="white" map={startupTexture} transparent opacity={props.isOn ? 1.0 : 0.0} />
+            </mesh> */}
             <mesh
               name="screenHolder_low"
               castShadow
