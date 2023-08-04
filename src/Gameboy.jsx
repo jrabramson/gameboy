@@ -1,10 +1,9 @@
-import React, { useRef, useEffect, useState, forwardRef, useMemo, useImperativeHandle } from 'react'
-import { useGLTF, useAnimations, useKeyboardControls, useVideoTexture } from '@react-three/drei'
+import React, { useRef, useEffect, useState, forwardRef, useMemo } from 'react'
+import { useGLTF, useAnimations, useKeyboardControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3, Quaternion, Mesh } from 'three'
 import gsap from 'gsap'
 import { debounce } from "lodash"
-import { useGameboyStore } from './state'
 
 import Sound from './Sound'
 
@@ -24,31 +23,6 @@ const Cart = forwardRef(({ geom, mat, fire, position = new Vector3(), rotation =
   />
 })
 
-
-const Carts = forwardRef(({ }, ref) => {
-  const addCart = ({ geom, mat, position = new Vector3(), rotation = new Vector3() }) => {
-    const cart = <mesh
-      key={carts.length}
-      name="cart"
-      castShadow
-      receiveShadow
-      geometry={geom}
-      material={mat}
-      position={position}
-      rotation={rotation}
-      scale={0.006}
-    />
-
-    carts.push(cart)
-  }
-
-  useImperativeHandle(ref, () => ({
-    addCart
-  }))
-
-  return <group ref={ref}>{carts}</group>
-})
-
 const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation = new Vector3() }) => {
   const mesh = new Mesh(geom, mat)
 
@@ -62,15 +36,6 @@ const createCart = ({ scene, geom, mat, fire, position = new Vector3(), rotation
   const render = () => {
     mesh.translateZ(-0.2);
     mesh.rotateZ(0.2);
-
-    // const targets = useGameboyStore((state) => state.targets)
-
-    // targets.forEach((target) => {
-    //   if (mesh.position.distanceTo(new Vector3(...target.position)) < 0.5) {
-    //     scene.remove(mesh)
-    //     console.log('hit')
-    //   }
-    // })
 
     requestAnimationFrame(render)
   }
@@ -105,8 +70,6 @@ const Gameboy = (props) => {
   const { nodes, materials, animations } = useGLTF('/gameboy.glb')
   const { actions } = useAnimations(animations, group)
 
-  const startupTexture = useVideoTexture('/startup.mp4')
-
   const [isRedLightOn, setIsRedLightOn] = useState(false)
   const [legsOut, setLegsOut] = useState(false)
   const [interactionEnabled, setInteractionEnabled] = useState(false)
@@ -140,17 +103,7 @@ const Gameboy = (props) => {
     targetRef.current.getWorldPosition(targetPos)
     spotLightRef.current.lookAt(group.current.position)
 
-    // if (!props.isOn) {
-    //   // group.current.rotation.z = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.02
-    //   // group.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.02
-    // }
-
     if (!interactionEnabled) return;
-
-    // state.camera.position.lerp(
-    //   new Vector3(targetPos.x, state.camera.position.y, targetPos.z),
-    //   0.1
-    // )
 
     speed = 0.0;
 
@@ -206,7 +159,6 @@ const Gameboy = (props) => {
     })
   })
 
-  // action setup
   useEffect(() => {
     ['unfold1', 'unfold2', 'unfold3', 'unfold4'].forEach((key) => {
       actions[key].setLoop(2200)
@@ -222,7 +174,6 @@ const Gameboy = (props) => {
     });
   }, [actions])
 
-  // key event subscriptions
   useEffect(() => {
     if (!interactionEnabled) return;
 
@@ -297,12 +248,6 @@ const Gameboy = (props) => {
   const fireCart = () => {
     const [position, rotation] = getCartPosition()
 
-    // cartsRef.current.addCart({
-    //   geom: nodes.cart.geometry,
-    //   mat: materials.Cartridge,
-    //   position: position,
-    //   rotation: rotation
-    // })
     createCart({
       position: position,
       rotation: rotation,
@@ -421,7 +366,6 @@ const Gameboy = (props) => {
 
   return (
     <>
-      <Carts ref={cartsRef} />
       <group ref={group} {...props} dispose={null}>
         <Sound url="sounds/shoot.wav" delay={3.5} ref={soundControllerRef} />
         <group name="Scene">
@@ -610,15 +554,6 @@ const Gameboy = (props) => {
               material={materials.External}
               position={[-0.006, 0.011, -0.027]}
             />
-            {/* <mesh
-              castShadow
-              receiveShadow
-              position={[-0.006, 0.012, -0.027]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              <planeGeometry args={[0.05, 0.05]} />
-              <meshStandardMaterial color="white" map={startupTexture} transparent opacity={props.isOn ? 1.0 : 0.0} />
-            </mesh> */}
             <mesh
               name="screenHolder_low"
               castShadow
