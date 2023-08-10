@@ -3,7 +3,7 @@ import { useGLTF, useAnimations, useKeyboardControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3, Quaternion, Mesh } from 'three'
 import gsap from 'gsap'
-import { debounce } from "lodash"
+import { throttle } from "lodash"
 
 import Sound from './Sound'
 
@@ -120,16 +120,23 @@ const Gameboy = (props) => {
     }
 
     if (forward) {
-      speed -= ds * acceleration;
+      // speed -= ds * acceleration;
+      velocity = -0.025
     }
 
     if (backward) {
-      speed += ds * acceleration;
+      // speed += ds * acceleration;
+      velocity = 0.025
     }
 
-    velocity += speed
-    velocity = Math.min(velocity, 0.025)
-    velocity = Math.max(velocity, -0.025)
+    if (!forward && !backward) {
+      velocity = 0.0
+    }
+
+    // console.log(speed)
+    // velocity += speed
+    // velocity = Math.min(velocity, 0.025)
+    // velocity = Math.max(velocity, -0.025)
 
     if (right && !backward && velocity !== 0) {
       group.current.rotation.y -= 0.01;
@@ -150,11 +157,11 @@ const Gameboy = (props) => {
     const v = velocity !== 0.0 ? Math.max(Math.abs(velocity), 0.015) * 50 : 0.0;
     ['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
       if (velocity < 0) {
-        actions[key].timeScale = v
+        actions[key].timeScale = 1
       }
 
       if (velocity > 0) {
-        actions[key].timeScale = -v
+        actions[key].timeScale = -1
       }
     })
   })
@@ -177,14 +184,14 @@ const Gameboy = (props) => {
   useEffect(() => {
     if (!interactionEnabled) return;
 
-    const unsubforwardEvent = subscribeKeys(
-      (state) => state.forward,
+    const unsubMoveEvent = subscribeKeys(
+      (state) => state.backward || state.forward,
       (value) => {
         if (value) {
           ;['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
             actions[key].reset()
             actions[key].play()
-            actions[key].fadeIn(1.5)
+            actions[key].fadeIn(0.5)
           })
 
           actions['idletr'].fadeOut(0.5)
@@ -202,46 +209,14 @@ const Gameboy = (props) => {
           actions['idle'].reset().play().fadeIn(0.5);
 
           ['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
-            actions[key].fadeOut(1.5)
-          })
-        }
-      }
-    )
-
-    const unsubbackwardEvent = subscribeKeys(
-      (state) => state.backward,
-      (value) => {
-        if (value) {
-          ;['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
-            actions[key].reset()
-            actions[key].play()
-            actions[key].fadeIn(1.5)
-          })
-
-          actions['idletr'].fadeOut(1.6)
-          actions['idletl'].fadeOut(1.6)
-          actions['idlebr'].fadeOut(1.6)
-          actions['idlebl'].fadeOut(1.6)
-          actions['idle'].fadeOut(1.6)
-        }
-
-        if (!value) {
-          actions['idletr'].reset().play().fadeIn(1.6)
-          actions['idletl'].reset().play().fadeIn(1.6)
-          actions['idlebr'].reset().play().fadeIn(1.6)
-          actions['idlebl'].reset().play().fadeIn(1.6)
-          actions['idle'].reset().play().fadeIn(1.6);
-
-          ['walktr2', 'walktl2', 'walkbr2', 'walkbl2', 'walking'].forEach((key) => {
-            actions[key].fadeOut(1.5)
+            actions[key].fadeOut(0.5)
           })
         }
       }
     )
 
     return () => {
-      unsubforwardEvent()
-      unsubbackwardEvent()
+      unsubMoveEvent()
     }
   }, [interactionEnabled])
 
@@ -267,9 +242,9 @@ const Gameboy = (props) => {
   }
 
   const debouncedFireCart = useMemo(
-    () => debounce(fireCart, 200, {
+    () => throttle(fireCart, 800, {
       'leading': true,
-      'trailing': false
+      'trailing': true
     })
     , []);
 
